@@ -81,5 +81,18 @@ shinyUI(fluidPage(
       h3("Preview of Uploaded Data"),
       withSpinner(tableOutput("contents"), type = 4, color = strava_orange)
     )
+  ),
+  tags$hr(),
+  tags$footer(
+    HTML(
+      "Made by Pablo Vangeenderhuysen. View the source on 
+     <a href='https://github.com/pablovgd/stravaReportR' target='_blank'>GitHub</a>."
+    ),
+    style = "
+    text-align: center;
+    padding: 10px;
+    font-size: 0.9em;
+    color: #777;"
   )
-))
+)
+)
