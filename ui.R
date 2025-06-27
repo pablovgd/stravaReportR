@@ -56,7 +56,7 @@ shinyUI(fluidPage(
       img(src = "stravalogo.png", class = "logo"),
       h1("stravaReportR"),
       h4("Generate personalized Strava analytics in one click"),
-      h4(HTML("To export a .csv with your Strava data, use <a href='https://entorb.net/strava-streamlit/' target='_blank'>Thorben's App</a>.")),
+      h4(HTML("To export a .csv with your Strava data, use <a href='https://entorb.net/strava-streamlit/' target='_blank'>Torben's App</a>.")),
       h4("Some known current limitations are:"),
       tags$ul(
         tags$li("Only 12 distinct colors implemented for categorical data"),
