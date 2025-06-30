@@ -57,9 +57,9 @@ shinyUI(fluidPage(
       h1("stravaReportR"),
       h4("Generate personalized Strava analytics in one click"),
       h4(HTML("To export a .csv with your Strava data, use <a href='https://entorb.net/strava-streamlit/' target='_blank'>Torben's App</a>.")),
+      h4(HTML("An example can be found <a href='https://pablovgd.github.io/varia/2025/06/20/strava.html' target='_blank'>here</a>.")),
       h4("Some known current limitations are:"),
       tags$ul(
-        tags$li("Only 12 distinct colors implemented for categorical data"),
         tags$li("Only plots maps of Belgium and Europe right now"))
   ),
   
