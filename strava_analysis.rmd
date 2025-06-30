@@ -279,6 +279,7 @@ knitr::kable(extremes)
 ## About the gear
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(viridis)
 gear_props <- strava %>%
   filter(sport_type %in% c("Ride", "GravelRide", "MountainBikeRide")) %>%
   mutate(year = format(date, "%Y")) %>%
@@ -289,7 +290,13 @@ gear_props <- strava %>%
 
 gear_props$gear[which("" == (gear_props$gear))] <- "Unknown"
 
+
 bike_colors <- c("#66C5CCFF", "#F6CF71FF", "#FC4C02FF","#DCB0F2FF", "#87C55FFF", "#9EB9F3FF", "#FE88B1FF", "#C9DB74FF", "#8BE0A4FF", "#B497E7FF", "#D3B484FF", "#B3B3B3FF")
+if(length(unique(gear_props$gear)) > 12){
+  bike_colors <-viridis_pal(option = "D")(length(unique(gear_props$gear)))
+}
+
+  
 names(bike_colors) <- unique(gear_props$gear)
 
 # Create 100% stacked bar plot
@@ -321,8 +328,8 @@ ggplot(df_rides, aes(x = gear, y = `km.h`, fill = gear)) +
        y = "Average Speed (km/h)") + 
   scale_fill_manual(values = bike_colors) +
   theme_minimal() +
-  theme(legend.position = "none")
-
+  theme(legend.position = "none") +
+  coord_flip()
 ```
 
 
@@ -337,6 +344,11 @@ df_runs <- strava %>%
 
 
 shoe_colors <- c("#66C5CCFF", "#F6CF71FF", "#FC4C02FF","#DCB0F2FF", "#87C55FFF", "#9EB9F3FF", "#FE88B1FF", "#C9DB74FF", "#8BE0A4FF", "#B497E7FF", "#D3B484FF", "#B3B3B3FF")
+
+if(length(unique(df_runs$gear)) > 12){
+  shoe_colors <-viridis_pal(option = "D")(length(unique(df_runs$gear)))
+}
+
 names(shoe_colors) <- unique(df_runs$gear)
 
 # Plot boxplot of average speed per bike (gear)
@@ -347,7 +359,8 @@ ggplot(df_runs, aes(x = gear, y = `pace`, fill = gear)) +
        y = "Average Speed (min/km)") +
   theme_minimal() +
   theme(legend.position = "none")  + 
-  scale_fill_manual(values = shoe_colors) 
+  scale_fill_manual(values = shoe_colors) +
+  coord_flip()
 
 ```
 
@@ -361,7 +374,8 @@ text <- tolower(paste(strava$name, collapse = " "))
 corpus <- Corpus(VectorSource(text))
 
 # Add custom stop words
-custom_stopwords <- c("van","de","het","swim","ride", "run", "workout", "walk", "morning", "evening", "lunch","afternoon","night","met","ochtend","avond","middag")
+custom_stopwords <- c("van","de","het","swim","ride", "run", "workout", "walk", "morning", "evening", "lunch","afternoon","night","met","ochtend","avond","middag","octhendrit","middagrit","avondrit",
+                      "ochtendloop","middagloop","avondloop","nachtloop","nachtrit","namiddagrit","namiddagloop")
 
 # Preprocess text with default and custom stopwords
 corpus <- corpus %>%

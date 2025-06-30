@@ -5,6 +5,6 @@ account: pablovgd
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14997494
-bundleId: 10528347
+bundleId: 10541996
 url: https://pablovgd.shinyapps.io/stravareportr/
 version: 1
