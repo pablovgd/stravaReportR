@@ -217,6 +217,12 @@ df <- strava %>%
     
   )
 
+#check if any column is all NA, change to zeros
+
+all_miss <- apply(df, 2, function(x) all(is.na(x)))
+names <- names(all_miss[all_miss>0])  
+df[,names] <- 0
+
 # Extract top activities
 extremes <- tibble(
   category = c("Fastest Average Speed 🚴️"
