@@ -32,11 +32,11 @@ shinyServer(function(input, output, session) {
     content = function(file) {
       tempReport <- file.path(tempdir(), "report.Rmd")
       
-      if (!file.exists("strava_analysis.Rmd")) {
+      if (!file.exists("strava_analysis.rmd")) {
         stop("The strava_analysis.Rmd file is missing in the app directory.")
       }
       
-      file.copy("strava_analysis.Rmd", tempReport, overwrite = TRUE)
+      file.copy("strava_analysis.rmd", tempReport, overwrite = TRUE)
       
       tempCSV <- file.path(tempdir(), "uploaded.csv")
       write.csv(uploaded_data(), tempCSV, row.names = FALSE)
