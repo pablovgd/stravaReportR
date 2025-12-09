@@ -57,6 +57,8 @@ shinyUI(fluidPage(
       h1("stravaReportR"),
       h4("Generate personalized Strava analytics in one click"),
       h4(HTML("To export a .csv with your Strava data, use <a href='https://entorb.net/strava-streamlit/' target='_blank'>Torben's App</a>.")),
+      h4("Log in with Strava, cache the data of the year(s) of choice,"),
+      h4("go to “activity list” and when hovering over the table you get the option to download it as .csv"),
       h4(HTML("An example can be found <a href='https://pablovgd.github.io/varia/2025/06/20/strava.html' target='_blank'>here</a>.")),
       h4("Some known current limitations are:"),
       tags$ul(
