@@ -4,5 +4,3 @@
 Shiny app to report historical Strava data.
 
 Deployed using Shinyapps.io at: https://pablovgd.shinyapps.io/stravareportr/
-
-Create your .csv using Thorben's app: https://entorb.net/strava-streamlit/
