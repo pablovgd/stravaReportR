@@ -26,16 +26,24 @@ free to contact me!
 strava <- read.csv(params$csv_path)
 ```
 
+```{r include=FALSE}
+strava$moving_time <- round(strava$moving_time/60,2)
+strava$start_date_local <- as.Date(strava$start_date_local)
+strava$distance <- round(strava$distance/1000,2)
+strava$average_speed <- round(strava$average_speed * 3.6,2)
+```
+
+
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 first <- tail(strava,1)
-knitr::kable(first[,c("date","name","minutes","km","km.h","sport_type")])
+knitr::kable(first[,c("start_date_local","name","moving_time","distance","average_speed","sport_type")])
 ```
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 last <- head(strava,1)
-knitr::kable(last[,c("date","name","minutes","km","km.h","sport_type")])
+knitr::kable(last[,c("start_date_local","name","moving_time","distance","average_speed","sport_type")])
 ```
 
 ## Yearly totals and trends
@@ -48,7 +56,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(tidyr)
 
-strava$date <- as.Date(strava$date)
+strava$date <- strava$start_date_local
 
 # Extract year and count activities per year
 activity_counts <- strava %>%
@@ -71,7 +79,9 @@ activity_counts <- strava %>%
   mutate(year = format(date, "%Y")) %>%
   count(year, sport_type)
 
-colors <- c("#66C5CCFF", "#F6CF71FF", "#FC4C02FF","#DCB0F2FF", "#87C55FFF", "#9EB9F3FF", "#FE88B1FF", "#C9DB74FF", "#8BE0A4FF", "#B497E7FF", "#D3B484FF", "#B3B3B3FF")
+qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
+colors <- sample(col_vector, size = length(unique(strava$sport_type)))
 names(colors) <- unique(strava$sport_type)
 
             # Create stacked bar plot
@@ -108,8 +118,8 @@ ggplot(activity_props, aes(x = year, y = prop, fill = sport_type)) +
 ### Distance,time and speed
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-strava$minutes <- as.numeric(strava$minutes)
-strava$km <- as.numeric(strava$km)
+strava$minutes <- as.numeric(strava$moving_time)
+strava$km <- as.numeric(strava$distance)
 
 # Summarize total time per year in hours
 time_per_year <- strava %>%
@@ -143,7 +153,7 @@ ggplot(distance_per_year, aes(x = year, y = total_km)) +
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Convert relevant columns
-strava$`km.h` <- as.numeric(strava$`km.h`)  # use backticks for column with dot
+strava$`km.h` <- as.numeric(strava$average_speed)  # use backticks for column with dot
 
 # Normalize sport_type
 df_speed <- strava %>%
@@ -155,22 +165,27 @@ df_speed <- strava %>%
   filter(!is.na(sport_type))  # remove NA sport types
 
 # Extract year and filter valid rows
-df_speed <- df_speed %>%
-  mutate(year = format(date, "%Y")) %>%
-  filter(sport_type %in% c("Run", "Ride"),
-         !is.na(`km.h`))
-
-# Create faceted boxplot
-ggplot(df_speed, aes(x = year, y = `km.h`, fill = sport_type)) +
-  geom_boxplot() +
-  facet_wrap(~ sport_type, scales = "free_y") +
-  labs(title = "Average Speed per Year by Sport Type",
-       x = "Year",
-       y = "Average Speed (km/h)",
-       fill = "Sport Type") +
-  theme_minimal() +
-  scale_fill_manual(values = colors[c("Ride", "Run")])+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# First check if ride and/or run are present
+if(nrow(df_speed) != 0){
+  df_speed <- df_speed %>%
+    mutate(year = format(date, "%Y")) %>%
+    filter(sport_type %in% c("Run", "Ride"),
+           !is.na(`km.h`))
+  
+  # Create faceted boxplot
+  ggplot(df_speed, aes(x = year, y = `km.h`, fill = sport_type)) +
+    geom_boxplot() +
+    facet_wrap(~ sport_type, scales = "free_y") +
+    labs(title = "Average Speed per Year by Sport Type",
+         x = "Year",
+         y = "Average Speed (km/h)",
+         fill = "Sport Type") +
+    theme_minimal() +
+    scale_fill_manual(values = colors[c("Ride", "Run")])+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+} else{
+  message("No rides or runs were found in your activities.")
+}
 
 ```
 
@@ -178,20 +193,27 @@ ggplot(df_speed, aes(x = year, y = `km.h`, fill = sport_type)) +
 ### Heart rate
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-strava$HR_av <- as.numeric(strava$HR_av)
 
-# Extract year and prepare data
-df_hr <- strava %>%
-  mutate(year = format(date, "%Y")) %>%
-  filter(!is.na(HR_av))  # Remove rows with missing HR
+#add check if HR data is present
+if(is.null(strava$average_heartrate)){
+  message("No heartrate data could be found in your activities.")
+} else{
+  strava$HR_av <- as.numeric(strava$average_heartrate)
+  
+  # Extract year and prepare data
+  df_hr <- strava %>%
+    mutate(year = format(date, "%Y")) %>%
+    filter(!is.na(HR_av))  # Remove rows with missing HR
+  
+  # Create box plot
+  ggplot(df_hr, aes(x = year, y = HR_av)) +
+    geom_boxplot(fill = "tomato", color = "darkred") +
+    labs(title = "Average Heart Rate per Year",
+         x = "Year",
+         y = "Average HR") +
+    theme_minimal()
+}
 
-# Create box plot
-ggplot(df_hr, aes(x = year, y = HR_av)) +
-  geom_boxplot(fill = "tomato", color = "darkred") +
-  labs(title = "Average Heart Rate per Year",
-       x = "Year",
-       y = "Average HR") +
-  theme_minimal()
 ```
 
 
@@ -200,6 +222,16 @@ ggplot(df_hr, aes(x = year, y = HR_av)) +
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(tibble)
 library(stringr)
+
+# Check if suffer_score column is present for non-premium users
+# add column with NA suffer score for all activities if it is the case
+if(is.null(strava$suffer_score)){
+  strava$suffer_score <- rep(NA,nrow(strava))
+}
+
+if(is.null(strava$HR_av)){
+  strava$HR_av <- rep(NA,nrow(strava))
+}
 
 # Convert relevant columns to numeric
 df <- strava %>%
@@ -210,7 +242,7 @@ df <- strava %>%
     HR_av = as.numeric(HR_av),
     kilojoules = as.numeric(kilojoules),
     suffer_score = as.numeric(suffer_score),
-    elev_gain = as.numeric(elev_gain),
+    total_elevation_gain = as.numeric(total_elevation_gain),
     kudos_count = as.numeric(kudos_count),
     pr_count = as.numeric(pr_count),
     comment_count = as.numeric(comment_count)
@@ -242,7 +274,7 @@ extremes <- tibble(
     max(df$HR_av, na.rm = TRUE),
     max(df$kilojoules, na.rm = TRUE),
     max(df$suffer_score, na.rm = TRUE),
-    max(df$elev_gain, na.rm = TRUE),
+    max(df$total_elevation_gain, na.rm = TRUE),
     max(df$kudos_count,na.rm = TRUE),
      max(df$pr_count,na.rm = TRUE),
     max(df$comment_count,na.rm = TRUE)
@@ -255,7 +287,7 @@ extremes <- tibble(
     df$name[which.max(df$HR_av)],
     df$name[which.max(df$kilojoules)],
     df$name[which.max(df$suffer_score)],
-    df$name[which.max(df$elev_gain)],
+    df$name[which.max(df$total_elevation_gain)],
     df$name[which.max(df$kudos_count)],
     df$name[which.max(df$pr_count)],
     df$name[which.max(df$comment_count)]
@@ -267,7 +299,7 @@ extremes <- tibble(
     df$type[which.max(df$HR_av)],
     df$type[which.max(df$kilojoules)],
     df$type[which.max(df$suffer_score)],
-    df$type[which.max(df$elev_gain)],
+    df$type[which.max(df$total_elevation_gain)],
     df$type[which.max(df$kudos_count)],
     df$type[which.max(df$pr_count)],
     df$type[which.max(df$comment_count)]
@@ -287,26 +319,26 @@ knitr::kable(extremes)
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(viridis)
 gear_props <- strava %>%
-  filter(sport_type %in% c("Ride", "GravelRide", "MountainBikeRide")) %>%
+  filter(sport_type %in% c("Ride", "GravelRide", "MountainBikeRide","EBikeRide")) %>%
   mutate(year = format(date, "%Y")) %>%
-  count(year, gear) %>%
+  count(year, gear_name) %>%
   group_by(year) %>%
   mutate(prop = n / sum(n)) %>%
   ungroup()
 
-gear_props$gear[which("" == (gear_props$gear))] <- "Unknown"
+gear_props$gear_name[which("" == (gear_props$gear_name))] <- "Unknown"
 
 
 bike_colors <- c("#66C5CCFF", "#F6CF71FF", "#FC4C02FF","#DCB0F2FF", "#87C55FFF", "#9EB9F3FF", "#FE88B1FF", "#C9DB74FF", "#8BE0A4FF", "#B497E7FF", "#D3B484FF", "#B3B3B3FF")
-if(length(unique(gear_props$gear)) > 12){
+if(length(unique(gear_props$gear_name)) > 12){
   bike_colors <-viridis_pal(option = "D")(length(unique(gear_props$gear)))
 }
 
   
-names(bike_colors) <- unique(gear_props$gear)
+names(bike_colors) <- unique(gear_props$gear_name)
 
 # Create 100% stacked bar plot
-ggplot(gear_props, aes(x = year, y = prop, fill = gear)) +
+ggplot(gear_props, aes(x = year, y = prop, fill = gear_name)) +
   geom_bar(stat = "identity", position = "fill") +
   scale_y_continuous(labels = scales::percent_format()) +
   scale_fill_manual(values = bike_colors) +
@@ -318,8 +350,9 @@ ggplot(gear_props, aes(x = year, y = prop, fill = gear)) +
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+strava$gear <- strava$gear_name
 df_rides <- strava %>%
-  filter(sport_type %in% c("Ride", "GravelRide", "MountainBikeRide"),
+  filter(sport_type %in% c("Ride", "GravelRide", "MountainBikeRide","EBikeRide"),
          !is.na(`km.h`),
          !is.na(gear),
          gear != "")  # exclude empty gear names if any
@@ -424,6 +457,9 @@ df_coords <- strava %>%
   separate(start_latlng, into = c("lat", "lon"), sep = ",", convert = TRUE) %>%
   filter(!is.na(lat), !is.na(lon), !is.na(sport_type))
 
+df_coords$lat <- as.numeric(df_coords$lat)
+df_coords$lon <- as.numeric(df_coords$lon)
+
 # Step 2: Round to cluster nearby locations and count per sport type
 df_bubbles <- df_coords %>%
   mutate(lat_round = round(lat, 1),
@@ -464,10 +500,15 @@ df_coords <- strava %>%
   separate(start_latlng, into = c("lat", "lon"), sep = ",", convert = TRUE) %>%
   filter(!is.na(lat), !is.na(lon), !is.na(sport_type))
 
+df_coords$lat <- as.numeric(df_coords$lat)
+df_coords$lon <- as.numeric(df_coords$lon)
+
 # Step 2: Filter to coordinates roughly within Belgium
 # Belgium bounding box: lat 49.5–51.5, lon 2.5–6.5
 df_be <- df_coords %>%
   filter(lat >= 49.5, lat <= 51.5, lon >= 2.5, lon <= 6.5)
+
+
 
 # Step 3: Cluster nearby activities
 df_be_bubbles <- df_be %>%

@@ -10,6 +10,11 @@ shinyUI(fluidPage(
   useShinyjs(),
   
   tags$head(
+    tags$script(HTML("
+  Shiny.addCustomMessageHandler('redirect', function(url) {
+    window.location.href = url;
+  });
+")),
     tags$style(HTML(sprintf("
       body.light-mode {
         background-color: #f9f9f9;
@@ -55,14 +60,13 @@ shinyUI(fluidPage(
   div(class = "centered",
       img(src = "stravalogo.png", class = "logo"),
       h1("stravaReportR"),
-      h4("Generate personalized Strava analytics in one click"),
-      h4(HTML("To export a .csv with your Strava data, use <a href='https://entorb.net/strava-streamlit/' target='_blank'>Torben's App</a>.")),
-      h4("Log in with Strava, cache the data of the year(s) of choice,"),
-      h4("go to “activity list” and when hovering over the table you get the option to download it as .csv"),
+      h4("Generate personalized Strava analytics in one (a few 😉) click(s)"),
+      h4("Log in with Strava", tags$b("wait (!) a few minutes"),"until preview data appears"),
+      h4("Select the year(s) of choice"),
+      h4("Generate and download the report"),
       h4(HTML("An example can be found <a href='https://pablovgd.github.io/varia/2025/06/20/strava.html' target='_blank'>here</a>.")),
       h4("Some known current limitations are:"),
-      tags$ul(
-        tags$li("Only plots maps of Belgium and Europe right now"))
+      h4(tags$i("Only plots maps of Belgium and Europe right now"))
   ),
   
   fluidRow(
@@ -72,10 +76,28 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      h3("Upload Your Activities .csv"),
-      fileInput("file", "Choose a Strava CSV File", accept = c(".csv")),
+      h3("Load your data"),
+      
+      uiOutput("login_button"),
+      
+      br(), br(),
       tags$hr(),
-      downloadButton("downloadReport", "Download HTML Report", class = "btn-primary"),
+      
+      sliderInput(
+        inputId = "year_range",
+        label   = "Select activity year range",
+        min     = 2000,
+        max     = as.numeric(format(Sys.Date(), "%Y")),
+        value   = c(2020, as.numeric(format(Sys.Date(), "%Y"))),
+        sep     = ""
+      ),
+      
+      downloadButton(
+        "downloadReport",
+        "Generate Report",
+        class = "btn-primary"
+      ),
+      
       width = 4
     ),
     

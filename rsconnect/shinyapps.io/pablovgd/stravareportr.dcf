@@ -1,12 +1,13 @@
 name: stravareportr
-title:
+title: stravaReportR
 username: pablovgd
 account: pablovgd
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14997494
-bundleId: 11376285
+bundleId: 11525246
 url: https://pablovgd.shinyapps.io/stravareportr/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: README.md
